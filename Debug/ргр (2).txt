@@ -1,0 +1,398 @@
+
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<locale.h>
+#include<conio.h>
+#include<string>
+#include<string.h>
+#include<stdlib.h>
+#include<Windows.h>
+#define PASS "7VTR6RLKX"
+
+typedef struct{
+	unsigned int serial;
+	char start[50] = { 0 };
+	char finish[50] = { 0 };
+	int intricacy;
+	int number;
+	bool deleted;
+} tourist;
+bool pass(char*, FILE*);
+void osn1(FILE*);
+void osn2(FILE*);
+void osn3(FILE*);
+void osn4(FILE*);
+void spec1(FILE*);
+void spec2(FILE*);
+void dop1(FILE*);
+void dop2(FILE*);
+
+int main(void)
+{
+	int m, n = 0;
+	bool pas;
+	char *DB = (char*)calloc(30, sizeof(char)), *kluch = (char*)calloc(30, sizeof(char)), *str = (char*)calloc(30, sizeof(char));
+	FILE *fp, *upass;
+	if ((upass = (FILE*)fopen("pass.txt", "r")) == NULL)
+	{
+		upass = (FILE*)fopen("pass.txt", "w");
+		printf(": ");
+		gets_s(DB, 30);
+		printf(": ");
+		gets_s(str, 30);
+		strcat(kluch, str);
+		if (!strcmp(kluch, PASS))
+		{
+			pas = true;
+		}
+		else
+		{
+			pas = false;
+		}
+		fprintf(upass, "DB = ");
+		fputs(DB, upass);
+		fprintf(upass, ";\nKEY = ");
+		fputs(kluch, upass);
+		fprintf(upass, ";\n");
+		fclose(upass);
+	}
+	else
+	{
+		pas = pass(DB, upass);
+	}
+	setlocale(LC_ALL, "Russian");
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+	if ((fp = (FILE*)fopen(DB, "wb+")) == NULL)
+	{
+		printf("Открыть файл невозможно");
+		_getch();
+		return 0;
+	}
+	free(DB);
+	if (pas)
+	{
+		for (; ; )
+		{
+		restart:
+			printf("\nМеню: \n0-Выход                                1-Добавить запись в базу данных\n2-Удалить запись из базы данных        "
+				"3-Просмотр записей\n4-Изменить запись\n5-Поиск маршрутов по начальному пункту\n"
+				"6-Поиск маршрутов по конечному пункту и диапазону сложности\n7-Сохранение базы данных в файле с заданным именем\n"
+				"8-Экспорт базы данных в текстовый файл с заданным именем\n\nВведите: ");
+			scanf("%d", &m);
+			switch (m)
+			{
+			case 0: fclose(fp);
+				fclose(upass); return 0;
+			case 1:
+				osn1(fp); break;
+			case 2: osn3(fp);
+				break;
+			case 3: osn2(fp);
+				break;
+			case 4: osn4(fp); break;
+			case 5:
+				spec2(fp); break;
+			case 6: spec1(fp);
+				break;
+			case 7: dop1(fp); break;
+			case 8: dop2(fp); break;
+			default: goto restart;
+			}
+			m = NULL;
+		}
+	}
+	else
+	{
+		for (; ; )
+		{
+		restart2:
+			printf("Меню: \n0-Выход           1-Добавить запись в базу данных\n2-Удалить запись из базы данных        "
+				"3-Просмотр записей\n 4-Изменить запись\n"
+				"Введен неверный ключ конфигурационного файла\n");
+			scanf("%d", &m);
+			switch (m)
+			{
+			case 0: fclose(fp); fclose(upass);
+				return 0;
+			case 1: osn1(fp);
+				break;
+			case 2:
+				osn3(fp); break;
+			case 3: osn2(fp); break;
+			case 4: osn4(fp);
+				break;
+			default:
+				goto restart2;
+			}
+			m = NULL;
+		}
+	}
+
+
+}
+bool pass(char *DB, FILE *upass)
+{
+	char *stroka = (char*)calloc(30, sizeof(char)), *strocka = (char*)calloc(30, sizeof(char));
+	fgets(stroka, 30, upass);
+	fgets(strocka, 30, upass);
+	char *pas = (char*)calloc(11, sizeof(char));
+	int x = 0;
+	while (strocka[x + 6] != ';')
+	{
+		pas[x] = strocka[x + 6];
+		x++;
+	}
+	x = 0;
+	while (stroka[x + 5] != ';')
+	{
+		DB[x] = stroka[x + 5];
+		x++;
+	}
+	free(stroka);
+	free(strocka);
+	return !strcmp(pas, PASS);
+}
+
+void osn1(FILE *fp)
+{
+	tourist route;
+	char musor;
+	int n, c = sizeof(route), l = 0, res;
+	fseek(fp, 0, SEEK_SET);
+	while (true)
+	{
+		tourist route1;
+		n = fread(&route1, sizeof(route1), 1, fp);
+		if (n == 0)
+		{
+			break;
+		}
+		l = route1.serial;
+		if (route1.deleted)
+		{
+			fseek(fp, -c, SEEK_CUR);
+			route.serial = route1.serial;
+			goto s_l;
+		}
+	};
+	route.serial = l + 1;
+s_l:
+	printf("Внесите следующие значения (каждое в новую строку): Название начального пункта, Название конечного пункта, Сложность маршрута, Номер маршрута\n");
+	musor = getchar();
+	gets_s(route.start);
+	gets_s(route.finish);
+	scanf("%d", &res);
+	route.intricacy = res;
+	scanf("%d", &res);
+	route.number = res;
+	route.deleted = false;
+	fwrite(&route, sizeof(route), 1, fp);
+}
+void osn3(FILE *fp)
+{
+	tourist route;
+	int ua, nal;
+	printf("Номер записи которую нужно удалить: ");
+	scanf("%d", &nal);
+	fseek(fp, sizeof(route) * (nal - 1), SEEK_SET);
+	ua = fread(&route, sizeof(route), 1, fp);
+	if (ua == 0) {
+		printf("Ошибка\n");
+	}
+	else if(route.deleted) {
+		printf("Эта запись уже была удалена\n");
+	}
+	else {
+		route.deleted = true;
+		fseek(fp, sizeof(route) * (nal - 1), SEEK_SET);
+		fwrite(&route, sizeof(route), 1, fp);
+		printf("Записьудалена\n");
+	}
+
+}
+void osn2(FILE* fp)
+{
+	fseek(fp, 0, SEEK_SET);
+	int kkk;
+	while (true)
+	{
+		tourist route;
+		kkk = fread(&route, sizeof(route), 1, fp);
+		if (kkk == 0) {
+			break;
+		}
+		if (!route.deleted) {
+			printf("%d\n", route.serial);
+			puts(route.start);
+			puts(route.finish);
+			printf("%d\n", route.intricacy);
+			printf("%d\n", route.number);
+		}
+	};
+}
+void osn4(FILE *fp)
+{
+	tourist route;
+	int n, nal, k;
+	char musor;
+	char *ton = (char*)malloc(50);
+	printf("Номерзаписи: ");
+	scanf("%d", &nal);
+	fseek(fp, sizeof(route) * (nal - 1), SEEK_SET);
+	n = fread(&route, sizeof(route), 1, fp);
+	if (n == 0)
+	{
+		printf("Ошибка");
+
+		goto exit;
+	}
+restart:
+	printf("Что вы хотите изменить?: \n1.Начальный пункт\n2.Конечный пункт\n3.Сложность маршрута\n4.Номер маршрута\n");
+	scanf("%d", &k);
+	int sum;
+	switch (k)
+	{
+	case 1: printf("Введите начальный пункт: ");
+		musor = getchar();
+		gets_s(ton, 50);
+		strcpy(route.start, ton);
+		break;
+	case 2: printf("Введите конечный пункт: ");
+		musor = getchar();
+		gets_s(ton, 50);
+		strcpy(route.finish, ton);
+		break;
+	case 3: printf("Введите сложность маршрута: ");
+		scanf("%d", &sum);
+		route.intricacy = sum;
+		break;
+	case 4: printf("Введитеномермаршрута: ");
+		scanf("%d", &sum);
+		route.number = sum;
+		break;
+	default: goto restart;
+		break;
+	}
+	fseek(fp, sizeof(route) * (nal - 1), SEEK_SET);
+	fwrite(&route, sizeof(route), 1, fp);
+exit:
+	free(ton);
+}
+
+void spec2(FILE *fp)
+{
+	float res = 0;
+	int giv;
+	char musor;
+	char *ton = (char*)malloc(50);
+	fseek(fp, 0, SEEK_SET);
+	printf("Введите начальный пункт: ");
+	musor = getchar();
+	gets_s(ton, 50);
+	do
+	{
+		tourist route;
+		giv = fread(&route, sizeof(route), 1, fp);
+		if (giv == 0)
+		{
+			break;
+		}
+		if (!route.deleted && !strcmp(route.start, ton))
+		{
+			printf("%d\n", route.serial);
+			puts(route.start);
+			puts(route.finish);
+			printf("%d\n", route.intricacy);
+			printf("%d\n", route.number);
+		}
+	} while (true);
+	free(ton);
+
+}
+void spec1(FILE *fp)
+{
+	int res;
+	int rex;
+	char musor;
+	char *ton = (char*)malloc(50);
+	fseek(fp, 0, SEEK_SET);
+	printf("Введите конечный пункт: ");
+	musor = getchar();
+	gets_s(ton, 50);
+	printf("Введите сложность маршрута: ");
+	scanf("%d", &res);
+	do
+	{
+		tourist route;
+		rex = fread(&route, sizeof(route), 1, fp);
+		if (rex == 0)
+		{
+			printf("Нет\n"); break;
+		}
+		if (!route.deleted && !strcmp(route.finish, ton) && route.intricacy == res)
+		{
+			printf("%d\n", route.serial);
+			puts(route.start);
+			puts(route.finish);
+			printf("%d\n", route.intricacy);
+			printf("%d\n", route.number);
+		}
+	} while (true);
+	free(ton);
+
+}
+
+void dop1(FILE *fp)
+{
+	char *name = (char*)calloc(30, sizeof(char)), musor2;
+	FILE *mux;
+	int mux2;
+	printf("Введитеназваниефайла: ");
+	musor2 = getchar();
+	gets_s(name, 25);
+	strcat(name, ".dat");
+	mux = fopen(name, "wb");
+	fseek(fp, 0, SEEK_SET);
+	do
+	{
+		tourist route;
+		mux2 = fread(&route, sizeof(route), 1, fp);
+		if (mux2 == 0)
+		{
+			break;
+		}
+		fwrite(&route, sizeof(route), 1, mux);
+	} while (true);
+	fclose(mux);
+	free(name);
+}
+void dop2(FILE *fp)
+{
+	char *name = (char*)calloc(30, sizeof(char)), musor2;
+	FILE *mux;
+	int mux2;
+	printf("Введитеназваниефайла: ");
+	musor2 = getchar();
+	gets_s(name, 25);
+	strcat(name, ".txt");
+	mux = fopen(name, "w");
+	fseek(fp, 0, SEEK_SET);
+	while (true)
+	{
+		tourist route;
+		mux2 = fread(&route, sizeof(route), 1, fp);
+		if (mux2 == 0) {
+			break;
+		}
+		fprintf(mux, "%d;", route.serial);
+		fputs(route.start, mux);
+		fprintf(mux, ";");
+		fputs(route.finish, mux);
+		fprintf(mux, ";%d;", route.intricacy);
+		fprintf(mux, "%d;\n", route.number);
+	};
+	fclose(mux);
+	free(name);
+}
+

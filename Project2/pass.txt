@@ -1,0 +1,2 @@
+DB = aviaticket.dat;
+KEY = 7VTR6RLKX;
